@@ -1,28 +1,38 @@
-import { delay, correctDate } from "./supportFunc.js";
+import { delay } from "./supportFunc.js";
 import { renderLogin } from "./renderLogin.js";
-import { postComment } from "./api.js";
+import { postComment, deleteComment, getFetch } from "./api.js";
+import { format } from "date-fns";
+
 
 // Функция render
-const renderComments = (app, isInitialLoading, isWaitingComment, comments, callback, user) => {
+export const renderComments = (app, isInitialLoading, isWaitingComment, comments, callback, user) => {
 
-  const commentHTML = comments.map((comment, index) => {
+  const commentHTML = comments.map((comment, index, id) => {
+
+    const createDate = format(new Date(comment.date), 'dd/MM/yyyy HH:mm');
+
     return `<li id="comment" class="comment" data-index="${index}">
       <div class="comment-header">
         <div id="name">${comment.author.name}</div>
-        <div id="date">${correctDate(comment.date)}</div>
+        <div id="date">${createDate}</div>
       </div>
       <div class="comment-body">
         <div class="comment-text">
           ${comment.text}
         </div>
       </div>
-      <div class="comment-footer">
-        <div class="likes">
-          <span class="likes-counter">${comment.likes}</span>
-          <button data-index="${index}" id="like-button" class="like-button
-          ${comment.isLiked ? '-active-like' : ''}
-          ${comment.isLikeLoading ? '-loading-like' : ''}">
-          </button>
+      <div class="common-footer">
+
+        <button data-id="${comment.id}" class="delete-button">Удалить комментарий</button>
+        
+        <div class="comment-footer">
+          <div class="likes">
+            <span class="likes-counter">${comment.likes}</span>
+            <button data-index="${index}" id="like-button" class="like-button
+            ${comment.isLiked ? '-active-like' : ''}
+            ${comment.isLikeLoading ? '-loading-like' : ''}">
+            </button>
+          </div>
         </div>
       </div>
     </li>`
@@ -53,8 +63,6 @@ const renderComments = (app, isInitialLoading, isWaitingComment, comments, callb
 
              <div class="add-form-row">
               <button type="button" id="add-form-button" class="add-form-button">Написать</button>
-
-              <button class="remove-form-button">Удалить последний</button>
             </div>
       </div>
             <p class="add-waiting">Комментарий добавляется...</p>
@@ -72,6 +80,32 @@ const renderComments = (app, isInitialLoading, isWaitingComment, comments, callb
   const addCommentForm = document.querySelector(".add-form");
   const commentInputElement = document.querySelector(".add-form-text");
 
+
+  //Функция удаления комментария
+  if (!user) {
+    const deleteButtons = document.querySelectorAll(".delete-button");
+    for (const deleteButton of deleteButtons) {
+      deleteButton.setAttribute('disabled', '');
+      deleteButton.classList.add("disabled");
+    }
+  }
+
+  if (user) {
+    const deleteButtons = document.querySelectorAll(".delete-button");
+
+    for (const deleteButton of deleteButtons) {
+      deleteButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+
+        const id = deleteButton.dataset.id;
+
+        deleteComment(id)
+        renderComments(app, isInitialLoading, isWaitingComment, comments, callback, user);
+      })
+    };
+  }
+
+
   // Функция лоадинг при добавлении комментариев в ленту
   if (user) {
     const waitingAddComment = () => {
@@ -88,7 +122,6 @@ const renderComments = (app, isInitialLoading, isWaitingComment, comments, callb
     };
     waitingAddComment();
   }
-
 
   // Добавление клика на лайк
   const initLikeButtons = () => {
@@ -137,6 +170,8 @@ const renderComments = (app, isInitialLoading, isWaitingComment, comments, callb
   }
   answerComment();
 
+
+
   if (!user) {
     const goToLogin = document.getElementById("go-to-login");
     goToLogin.addEventListener("click", (event) => {
@@ -149,5 +184,3 @@ const renderComments = (app, isInitialLoading, isWaitingComment, comments, callb
     if (callback) callback(user)
   }
 }
-
-export { renderComments };
