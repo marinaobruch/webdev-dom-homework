@@ -9,6 +9,11 @@ export const renderComments = (app, isInitialLoading, isWaitingComment, comments
 
   const commentHTML = comments.map((comment, index, id) => {
 
+    // ${!user ? `` : `${user._id === post.user.id ? `            
+    // <div class="delete-button-main">
+    // <button class="delete-button" data-post-id="${post.id}">Удалить пост</button>
+    // </div>` : ``}`}
+
     const createDate = format(new Date(comment.date), 'dd/MM/yyyy HH:mm');
 
     return `<li id="comment" class="comment" data-index="${index}">
@@ -37,6 +42,7 @@ export const renderComments = (app, isInitialLoading, isWaitingComment, comments
       </div>
     </li>`
   }).join("");
+  console.log(user.name);
 
   const appHtml = `
   <div class="container">
